@@ -1,0 +1,89 @@
+// 22/08 歓迎会＋送別会 Voting API
+
+// Handle POST requests to submit a vote
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const restaurantId = parseInt(data.restaurantId);
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const voteSheet = ss.getSheetByName('Vote_Counts');
+    const logSheet = ss.getSheetByName('Vote_Log');
+    
+    const range = voteSheet.getRange('A:D');
+    const values = range.getValues();
+    
+    for (let i = 1; i < values.length; i++) {
+      if (values[i][0] === restaurantId) {
+        const currentVotes = values[i][2] || 0;
+        voteSheet.getRange(i + 1, 3).setValue(currentVotes + 1);
+        voteSheet.getRange(i + 1, 4).setValue(new Date());
+        
+        if (logSheet) {
+          logSheet.appendRow([new Date(), restaurantId, values[i][1], e.parameter.userIP || 'Unknown']);
+        }
+        
+        return ContentService
+          .createTextOutput(JSON.stringify({
+            success: true,
+            restaurantId: restaurantId,
+            newVoteCount: currentVotes + 1,
+            message: 'Vote recorded successfully!'
+          }))
+          .setMimeType(ContentService.MimeType.JSON)
+          .setHeaders({
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+          });
+      }
+    }
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: 'Restaurant not found' }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: 'Error: ' + error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Handle GET requests to fetch current vote counts
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('Vote_Counts');
+    const range = sheet.getRange('A2:D8');
+    const values = range.getValues();
+    
+    const results = values.map(row => ({
+      id: row[0],
+      name: row[1],
+      votes: row[2] || 0,
+      lastUpdated: row[3]
+    }));
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: true, data: results }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders({ 'Access-Control-Allow-Origin': '*' });
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: 'Error: ' + error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Handle OPTIONS requests for CORS preflight
+function doOptions(e) {
+  return ContentService
+    .createTextOutput()
+    .setHeaders({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+}
