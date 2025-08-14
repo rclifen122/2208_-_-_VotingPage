@@ -1,75 +1,68 @@
-// Voting API service for Google Sheets integration
-// 22/08 歓迎会＋送別会 Restaurant Voting
+import { supabase } from './supabase'
 
-// Replace this URL with your actual Google Apps Script deployment URL
-const API_URL = import.meta.env.VITE_API_URL;
-
-export const submitVote = async (restaurantId) => {
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        restaurantId: restaurantId
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Vote submission error:', error);
-    return {
-      success: false,
-      message: 'ネットワークエラーです。もう一度お試しください。(Network error. Please try again.)'
-    };
-  }
-};
-
-export const fetchVoteCounts = async () => {
-  try {
-    const response = await fetch(API_URL, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Vote fetch error:', error);
-    return {
-      success: false,
-      message: 'Could not fetch vote counts.',
-      data: []
-    };
-  }
-};
-
-// Check if API is configured
+// Check if Supabase is configured
 export const isApiConfigured = () => {
-  return !!API_URL; // Checks if API_URL is not null, undefined, or empty
-};
+  return import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
+}
 
-// Demo mode for testing without API
+// Fetch vote counts from Supabase
+export const fetchVoteCounts = async () => {
+  if (!isApiConfigured()) return { success: false, data: [] }
+
+  try {
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('id, name, votes')
+      .order('id')
+
+    if (error) throw error
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error fetching vote counts:', error)
+    return { success: false, message: error.message, data: [] }
+  }
+}
+
+// Submit a vote to Supabase
+export const submitVote = async (restaurantId) => {
+  if (!isApiConfigured()) return { success: false }
+
+  try {
+    const { error } = await supabase.rpc('increment_vote', {
+      restaurant_id: restaurantId,
+    })
+
+    if (error) throw error
+
+    // After a successful vote, fetch the latest counts to get the new number
+    const { data: updatedRestaurants, error: fetchError } = await supabase
+      .from('restaurants')
+      .select('id, votes')
+    
+    if (fetchError) throw fetchError
+
+    const updatedRestaurant = updatedRestaurants.find(r => r.id === restaurantId)
+
+    return {
+      success: true,
+      newVoteCount: updatedRestaurant ? updatedRestaurant.votes : 0,
+      message: 'Vote recorded successfully!',
+    }
+  } catch (error) {
+    console.error('Error submitting vote:', error)
+    return { success: false, message: error.message }
+  }
+}
+
+// Demo mode for local testing without API keys
 export const submitVoteDemo = async (restaurantId) => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
+  console.log('Running in demo mode')
+  await new Promise((resolve) => setTimeout(resolve, 500))
   return {
     success: true,
     restaurantId: restaurantId,
     newVoteCount: Math.floor(Math.random() * 50) + 1,
-    message: '投票が記録されました！(Vote recorded!)'
-  };
-};
+    message: '投票が記録されました！(Vote recorded!)',
+  }
+}
