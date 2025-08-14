@@ -2,7 +2,7 @@
   "name": "restaurant-voting",
   "version": "1.0.0",
   "description": "Bilingual Vietnamese-Japanese restaurant voting page for company party",
-  "homepage": "https://rclifen122.github.io/Voting_Res",
+  "homepage": "https://rclifen122.github.io/2208_-_-_VotingPage",
   "type": "module",
   "scripts": {
     "dev": "vite",
