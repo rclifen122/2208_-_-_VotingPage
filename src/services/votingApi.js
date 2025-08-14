@@ -58,7 +58,7 @@ export const fetchVoteCounts = async () => {
 
 // Check if API is configured
 export const isApiConfigured = () => {
-  return API_URL !== 'https://script.google.com/macros/s/AKfycbwmvmS9m-CTtOHhyKNp9T3XfChwLIJk-Fp-o9MU1bFLP1ZeCqQfoSjmrd9Kr545BwVi/exec';
+  return !!API_URL; // Checks if API_URL is not null, undefined, or empty
 };
 
 // Demo mode for testing without API

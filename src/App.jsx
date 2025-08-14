@@ -76,6 +76,10 @@ function AppContent() {
   }, [loadVoteCounts]);
 
   const handleVote = (restaurantId, newVoteCount) => {
+    if (votedRestaurants.size >= 3 && !votedRestaurants.has(restaurantId)) {
+      alert(language === 'vi' ? 'Bạn đã bình chọn cho 3 nhà hàng. Không thể bình chọn thêm.' : 'すでに3つのレストランに投票しました。これ以上投票できません。');
+      return;
+    }
     // Update restaurant vote count with the value from API
     setRestaurants(prevRestaurants => {
       const updatedRestaurants = prevRestaurants.map(restaurant =>
