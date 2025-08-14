@@ -2,7 +2,7 @@
 // 22/08 歓迎会＋送別会 Restaurant Voting
 
 // Replace this URL with your actual Google Apps Script deployment URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbwmvmS9m-CTtOHhyKNp9T3XfChwLIJk-Fp-o9MU1bFLP1ZeCqQfoSjmrd9Kr545BwVi/exec';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const submitVote = async (restaurantId) => {
   try {
