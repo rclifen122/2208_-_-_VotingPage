@@ -1,50 +1,64 @@
 # Voting Res - Restaurant Voting Page
 
-A single-page React + Vite experience for curating company dinner spots. Editors keep restaurant facts in `restaurant_infor.txt`, drop menu photos into `imagemenu/`, and the page instantly exposes a modern cover hero, restaurant showcase, and interactive menu gallery. Deploy-ready for Vercel/GitHub Pages with zero server dependencies.
+A modern React + Vite experience for showcasing shortlisted restaurants, collecting votes backed by Supabase, and managing menu/cover assets without touching the codebase. Built for GitHub → Vercel deployments with a lightweight admin console.
 
-## Features
-- **Cover hero** with configurable copy to set the tone for the event.
-- **Restaurant cards** show rating, review counts, addresses, and contextual blurbs.
-- **Local voting** keeps track of per-browser votes with graceful reset.
-- **Menu gallery** pulls every image from `imagemenu/<restaurant>` automatically (with lazy loading & "show all" control).
-- **Data-driven**: Editing `restaurant_infor.txt` (JSON) instantly updates the UI - no touching JSX required.
+## Highlights
+- **Live Supabase votes**: Frontend records ballots via the `increment_vote` RPC, so totals persist across browsers/devices (one ballot per visitor).
+- **Vote dashboard**: A real-time panel shows restaurant counts, total ballots, top two leaders, and the visitor's locked choice.
+- **Image-first cards**: Each venue shows rating, review counts, address, and expandable menu galleries with full-screen previews.
+- **Admin console** (`/admin`): Secure login (email + `VITE_ADMIN_PASSCODE`) to update cover images and reorder menu pages stored in Supabase.
+- **Offline fallback**: When Supabase env vars are missing, the app reads from `restaurant_infor.txt` + `imagemenu/` so you can demo locally without a backend.
 
 ## Project Structure
 ```
 .
-|-- restaurant_infor.txt      # JSON array with restaurant metadata
-|-- imagemenu/                # Subfolders named after each restaurant slug; drop PNG/JPG pages here
+|-- restaurant_infor.txt      # JSON seed for local/offline preview
+|-- imagemenu/                # Local menu images mapped by restaurant slug
+|-- supabase/schema.sql       # Tables, RPC, policies for Supabase
 |-- src/
-|   |-- App.jsx               # Page composition and voting logic
-|   |-- components/           # Cover, restaurant cards, menu gallery
-|   `-- data/restaurants.js   # Parses restaurant_infor + menu folders
-`-- public/ (optional)        # Extra static assets if needed
+|   |-- App.jsx               # Router shell (public + admin)
+|   |-- pages/                # MainPage + AdminPage
+|   |-- components/           # Cover, cards, gallery, etc.
+|   |-- services/             # Supabase client + data helpers
+|   `-- data/restaurants.js   # Local fallback loader
+|-- DEPLOYMENT.md             # GitHub → Vercel workflow
+`-- SETUP_GUIDE.md            # End-to-end environment checklist
 ```
 
-### Updating restaurant info
-1. Open `restaurant_infor.txt` and add/edit entries (JSON).
-2. Make sure each entry uses a unique `id`/`menuFolder` slug.
-3. Drop menu images (PNG/JPG) into `imagemenu/<slug>/` - filenames are flexible.
-4. Run `npm run dev` to verify rendering.
+## Environment Variables
+| Name | Purpose |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon/public API key |
+| `VITE_ADMIN_PASSCODE` | Shared secret for `/admin` login (email is locked to `zzblackstar67@gmail.com`) |
 
-### Voting
-Votes are stored in `localStorage` per browser. A reset link is available in the UI for preview/testing. Hooking this up to an API later only requires swapping out the in-memory logic in `App.jsx`.
+Without the Supabase variables the site still renders using bundled data, but votes remain local only and the admin console is disabled.
 
-## Getting Started
+## Local Development
 ```bash
 npm install
-npm run dev   # open http://localhost:5173
-npm run build # generates dist/ for Vercel or static hosting
+npm run dev   # http://localhost:5173
+npm run build # production bundle in dist/
 ```
 
-## Deploying to Vercel
-1. Push the repo to GitHub.
-2. Create a new Vercel project from that repo.
-3. Build command: `npm run build` - Output: `dist`
-4. Every new push to `main` (or your chosen branch) redeploys automatically.
+### Updating restaurants (Supabase)
+1. Run the SQL in `supabase/schema.sql` to create `restaurants`, `menu_images`, and the `increment_vote` RPC.
+2. Insert or edit restaurant rows via Supabase Dashboard.
+3. Add menu pages into `menu_images` with `restaurant_id` references and preferred `sort_order`.
+4. Visit `/admin`, log in with your email + `VITE_ADMIN_PASSCODE`, and tweak cover URLs or ordering as needed.
 
-## Customizing the Cover Section
-`heroContent` inside `src/App.jsx` holds the cover text & CTA labels. Tweak it to match each event - no component changes required.
+### Updating restaurants (offline preview)
+1. Edit `restaurant_infor.txt` (JSON array).
+2. Drop PNG/JPG files into `imagemenu/<restaurant-id>/`.
+3. Run `npm run dev` — the UI will hydrate from these files automatically.
+
+## Deploying to Vercel
+1. Push to GitHub (`main`).
+2. In Vercel, import the repo (Framework: Vite, Build Command: `npm run build`, Output: `dist`).
+3. Set the environment variables listed above.
+4. Re-deploy; `/` serves the public voting page, `/admin` is the configuration console.
+
+For detailed step-by-step instructions, see `DEPLOYMENT.md` and `SETUP_GUIDE.md`.
 
 ---
-Need help extending this (backend votes, RSVP flows, analytics)? Open an issue or drop a note in your next request.
+Need enhancements (RSVP flows, analytics, additional auth)? Open an issue or drop another request.

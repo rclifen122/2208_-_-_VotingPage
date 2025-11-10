@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import MenuGallery from './MenuGallery'
 
-const RestaurantCard = ({ restaurant, onVote, onToggleMenu, isExpanded, hasVoted }) => {
+const RestaurantCard = ({ restaurant, onVote, onToggleMenu, isExpanded, userVote }) => {
   const [feedback, setFeedback] = useState('')
   const [isVoting, setIsVoting] = useState(false)
+  const rating = Number(restaurant.rating ?? 0)
+  const reviewCount = restaurant.reviewCount ?? 0
+  const isUserChoice = userVote === restaurant.id
+  const voteLocked = Boolean(userVote && !isUserChoice)
 
   const handleVote = async () => {
     if (isVoting) return
@@ -54,7 +58,7 @@ const RestaurantCard = ({ restaurant, onVote, onToggleMenu, isExpanded, hasVoted
                 {renderStars(restaurant.rating)}
               </div>
               <span className="text-slate-500">
-                {restaurant.rating.toFixed(1)} / {restaurant.reviewCount} reviews
+                {rating.toFixed(1)} / {reviewCount} reviews
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -66,14 +70,22 @@ const RestaurantCard = ({ restaurant, onVote, onToggleMenu, isExpanded, hasVoted
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               onClick={handleVote}
-              disabled={hasVoted}
+              disabled={voteLocked || isVoting || isUserChoice}
               className={`rounded-full px-6 py-2 text-sm font-semibold transition-all ${
-                hasVoted
+                isUserChoice
                   ? 'bg-emerald-50 text-emerald-700'
+                  : voteLocked
+                  ? 'bg-slate-200 text-slate-500'
                   : 'bg-slate-900 text-white hover:-translate-y-0.5 hover:bg-slate-800'
               } ${isVoting ? 'opacity-70' : ''}`}
             >
-              {hasVoted ? 'Thanks for voting' : isVoting ? 'Counting...' : 'Vote for this venue'}
+              {isUserChoice
+                ? 'Your vote is here'
+                : voteLocked
+                ? 'Vote already used'
+                : isVoting
+                ? 'Counting...'
+                : 'Vote for this venue'}
             </button>
 
             <button
@@ -98,7 +110,7 @@ const RestaurantCard = ({ restaurant, onVote, onToggleMenu, isExpanded, hasVoted
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Menu Preview</p>
               <p className="text-base font-semibold text-slate-900">
-                {restaurant.menuImages.length} uploaded pages
+                {restaurant.menuImages?.length ?? 0} uploaded pages
               </p>
             </div>
             <span className="text-sm text-slate-500">

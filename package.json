@@ -1,7 +1,7 @@
 {
   "name": "restaurant-voting",
   "version": "1.0.0",
-  "description": "Bilingual Vietnamese-Japanese restaurant voting page for company party",
+  "description": "Supabase-backed restaurant voting and admin console",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,8 +11,10 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.80.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",

@@ -12,17 +12,29 @@ const menuImages = Object.entries(menuImagesGlob).map(([path, url]) => ({
   url,
 }))
 
+let fallbackImageId = 0
+
 export const restaurants = restaurantInfo.map((info) => {
   const matchedImages = menuImages
     .filter((image) => image.path.includes(info.menuFolder))
     .sort((a, b) => a.path.localeCompare(b.path))
-    .map((image) => image.url)
+    .map((image) => ({
+      id: `local-${fallbackImageId++}`,
+      url: image.url,
+      sortOrder: fallbackImageId,
+    }))
 
   return {
-    ...info,
+    id: info.id,
+    name: info.name,
+    aka: info.aka,
+    rating: info.rating ?? 0,
+    reviewCount: info.reviewCount ?? 0,
+    address: info.address,
+    shortDescription: info.shortDescription,
+    coverImage: info.featuredImage ?? matchedImages[0]?.url ?? '',
     votes: info.initialVotes ?? 0,
     menuImages: matchedImages,
-    coverImage: info.featuredImage ?? matchedImages[0] ?? '',
   }
 })
 
