@@ -7,9 +7,9 @@ import { isSupabaseConfigured } from '../services/supabase'
 import { fetchRestaurantsWithMenus, submitVote } from '../services/votingApi'
 
 const heroContent = {
-  eyebrow: 'Company Dinner Vote',
-  title: 'Cast your single vote',
-  subtitle: 'Two venues. One choice. Pick the spot you want for team night.',
+  eyebrow: 'ESUTECH PARTY RESTAURANT VOTE',
+  title: 'Choice the restaurant you want for 15/11 party',
+  subtitle: 'Two venues. One choice.',
   description: 'Browse the contenders below and lock in your one vote.',
   ctaLabel: 'See shortlist',
   ctaHint: 'Scroll to review menus and vote.',

@@ -52,7 +52,7 @@ const RestaurantCard = ({ restaurant, onVote, onToggleMenu, isExpanded, userVote
           <h3 className="mt-2 text-2xl font-bold text-slate-900">{restaurant.name}</h3>
           <p className="mt-2 text-sm text-slate-500">{restaurant.shortDescription}</p>
 
-          <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-600">
+          <div className="mt-4 flex flex-col gap-4 text-sm text-slate-600 md:flex-row md:items-center md:gap-6">
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 text-base font-semibold text-amber-500">
                 {renderStars(restaurant.rating)}
@@ -61,9 +61,24 @@ const RestaurantCard = ({ restaurant, onVote, onToggleMenu, isExpanded, userVote
                 {rating.toFixed(1)} / {reviewCount} reviews
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-2 w-2 rounded-full bg-slate-400" aria-hidden="true" />
-              <span>{restaurant.address}</span>
+            <div className="flex flex-col gap-2 text-sm text-slate-600">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-2 w-2 rounded-full bg-slate-400" aria-hidden="true" />
+                <span>{restaurant.address}</span>
+              </div>
+              {restaurant.mapUrl && (
+                <a
+                  href={restaurant.mapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-slate-900 underline-offset-4 hover:underline"
+                >
+                  <span role="img" aria-hidden="true">
+                    🗺️
+                  </span>
+                  Open in Google Maps
+                </a>
+              )}
             </div>
           </div>
 

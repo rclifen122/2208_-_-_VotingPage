@@ -14,6 +14,7 @@ export const fetchRestaurantsWithMenus = async () => {
         review_count,
         address,
         short_description,
+        map_url,
         cover_image,
         votes,
         menu_images (
@@ -38,6 +39,7 @@ export const fetchRestaurantsWithMenus = async () => {
     reviewCount: restaurant.review_count ?? 0,
     address: restaurant.address,
     shortDescription: restaurant.short_description,
+    mapUrl: restaurant.map_url,
     coverImage: restaurant.cover_image,
     votes: restaurant.votes ?? 0,
     menuImages: (restaurant.menu_images ?? [])

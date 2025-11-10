@@ -12,6 +12,7 @@ create table if not exists public.restaurants (
   rating numeric(3,1),
   review_count integer default 0,
   address text,
+  map_url text,
   short_description text,
   cover_image text,
   votes integer not null default 0,
