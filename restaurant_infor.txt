@@ -8,7 +8,9 @@
     "address": "52 Duong Bau 1, Tan Son Nhi, Tan Phu, Ho Chi Minh City 70000, Vietnam",
     "shortDescription": "Rice paper party spreads, street bites, and sharing platters that stay light but satisfying.",
     "menuFolder": "imagemenu/banh-trang-thien",
-    "featuredImage": "https://ibb.co/XrhG86wg"
+    "featuredImage": "https://ibb.co/XrhG86wg",
+    "badge": "Recommended",
+    "badgeNote": "Bonus Decor and Dessert / Được trang trí cho tiệc và tặng tráng miệng"
   },
   {
     "id": "bia-duc-bellazza",

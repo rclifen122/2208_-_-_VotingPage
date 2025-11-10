@@ -32,6 +32,8 @@ export const restaurants = restaurantInfo.map((info) => {
     reviewCount: info.reviewCount ?? 0,
     address: info.address,
     shortDescription: info.shortDescription,
+    badge: info.badge,
+    badgeNote: info.badgeNote,
     coverImage: info.featuredImage ?? matchedImages[0]?.url ?? '',
     votes: info.initialVotes ?? 0,
     mapUrl: info.mapUrl || info.googleMapsUrl || info.mapsLink || '',

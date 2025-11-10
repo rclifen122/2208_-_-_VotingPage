@@ -43,7 +43,7 @@ npm run build # production bundle in dist/
 
 ### Updating restaurants (Supabase)
 1. Run the SQL in `supabase/schema.sql` to create `restaurants`, `menu_images`, and the `increment_vote` RPC.
-2. Insert or edit restaurant rows via Supabase Dashboard (fields include `map_url` for Google Maps links and `cover_image` URLs).
+2. Insert or edit restaurant rows via Supabase Dashboard (fields include `map_url`, `badge`, `badge_note`, and `cover_image` URLs).
 3. Add menu pages into `menu_images` with `restaurant_id` references and preferred `sort_order`.
 4. Visit `/admin`, log in with your email + `VITE_ADMIN_PASSCODE`, and tweak cover URLs or ordering as needed.
 

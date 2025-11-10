@@ -14,6 +14,8 @@ create table if not exists public.restaurants (
   address text,
   map_url text,
   short_description text,
+  badge text,
+  badge_note text,
   cover_image text,
   votes integer not null default 0,
   created_at timestamptz not null default now()

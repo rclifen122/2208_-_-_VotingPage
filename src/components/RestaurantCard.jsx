@@ -48,9 +48,15 @@ const RestaurantCard = ({ restaurant, onVote, onToggleMenu, isExpanded, userVote
         <div className="md:w-2/3">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-slate-400">
             {restaurant.aka}
+            {restaurant.badge && (
+              <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-slate-700">
+                {restaurant.badge}
+              </span>
+            )}
           </div>
           <h3 className="mt-2 text-2xl font-bold text-slate-900">{restaurant.name}</h3>
           <p className="mt-2 text-sm text-slate-500">{restaurant.shortDescription}</p>
+          {restaurant.badgeNote && <p className="text-xs font-semibold text-slate-700">{restaurant.badgeNote}</p>}
 
           <div className="mt-4 flex flex-col gap-4 text-sm text-slate-600 md:flex-row md:items-center md:gap-6">
             <div className="flex items-center gap-2">
