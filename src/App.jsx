@@ -1,250 +1,149 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import CoverSection from './components/CoverSection'
 import RestaurantCard from './components/RestaurantCard'
-import VoteResults from './components/VoteResults'
-import LanguageToggle from './components/LanguageToggle'
-import { LanguageProvider, useLanguage } from './context/LanguageContext'
-import { restaurants as initialRestaurants } from './data/restaurants'
-import { fetchVoteCounts, isApiConfigured } from './services/votingApi'
+import { restaurants as restaurantData, totalMenuImages } from './data/restaurants'
 
-function AppContent() {
-  const [restaurants, setRestaurants] = useState(initialRestaurants)
-  const [votedRestaurants, setVotedRestaurants] = useState(new Set())
-  const [isLoadingVotes, setIsLoadingVotes] = useState(false)
-  const [lastFetchTime, setLastFetchTime] = useState(null)
-  const { t, language } = useLanguage()
+const heroContent = {
+  eyebrow: 'Company Social - August 22',
+  title: 'Help pick the dinner venue',
+  subtitle: 'Modern Vietnamese x Continental mash-up, you make the final call.',
+  description:
+    'Review each venue, skim through their real menus, and cast your vote. We will lock the booking based on the live tally before Friday noon. Your pick shapes the mood, the flavors, and the stories we will tell on Monday.',
+  ctaLabel: 'Browse restaurants',
+  ctaHint: 'Scroll to see the contenders and their full menus.',
+}
 
-  // Calculate total votes across all restaurants
-  const totalVotes = restaurants.reduce((sum, restaurant) => sum + restaurant.votes, 0)
-
-  // Fetch vote counts from API
-  const loadVoteCounts = useCallback(async () => {
-    if (!isApiConfigured()) return; // Skip if API not configured
-    
-    setIsLoadingVotes(true);
-    try {
-      const result = await fetchVoteCounts();
-      if (result.success && result.data) {
-        setRestaurants(prevRestaurants => 
-          prevRestaurants.map(restaurant => {
-            const apiData = result.data.find(item => item.id === restaurant.id);
-            return {
-              ...restaurant,
-              votes: apiData ? apiData.votes : restaurant.votes
-            };
-          })
-        );
-        setLastFetchTime(new Date());
-      }
-    } catch (error) {
-      console.error('Failed to load vote counts:', error);
-    } finally {
-      setIsLoadingVotes(false);
-    }
-  }, []);
-
-  // Load data from localStorage and API on component mount
-  useEffect(() => {
-    const savedVotes = localStorage.getItem('votedRestaurants')
-    if (savedVotes) {
-      setVotedRestaurants(new Set(JSON.parse(savedVotes)))
-    }
-    
-    // If API is not configured, load from localStorage
-    if (!isApiConfigured()) {
-      const savedRestaurantVotes = localStorage.getItem('restaurantVotes')
-      if (savedRestaurantVotes) {
-        const parsedVotes = JSON.parse(savedRestaurantVotes)
-        setRestaurants(prevRestaurants => 
-          prevRestaurants.map(restaurant => ({
-            ...restaurant,
-            votes: parsedVotes[restaurant.id] || 0
-          }))
-        )
-      }
-    } else {
-      // Load from API if configured
-      loadVoteCounts();
-    }
-  }, [loadVoteCounts])
-
-  // Periodic vote count refresh (every 30 seconds if API is configured)
-  useEffect(() => {
-    if (!isApiConfigured()) return;
-    
-    const interval = setInterval(loadVoteCounts, 30000);
-    return () => clearInterval(interval);
-  }, [loadVoteCounts]);
-
-  const handleVote = (restaurantId, newVoteCount) => {
-    if (votedRestaurants.size >= 3 && !votedRestaurants.has(restaurantId)) {
-      alert(language === 'vi' ? 'Bạn đã bình chọn cho 3 nhà hàng. Không thể bình chọn thêm.' : 'すでに3つのレストランに投票しました。これ以上投票できません。');
-      return;
-    }
-    // Update restaurant vote count with the value from API
-    setRestaurants(prevRestaurants => {
-      const updatedRestaurants = prevRestaurants.map(restaurant =>
-        restaurant.id === restaurantId
-          ? { ...restaurant, votes: newVoteCount || restaurant.votes + 1 }
-          : restaurant
-      )
-      
-      // Save restaurant votes to localStorage (backup)
-      if (!isApiConfigured()) {
-        const restaurantVotes = {}
-        updatedRestaurants.forEach(restaurant => {
-          restaurantVotes[restaurant.id] = restaurant.votes
-        })
-        localStorage.setItem('restaurantVotes', JSON.stringify(restaurantVotes))
-      }
-      
-      return updatedRestaurants
-    })
-
-    // Update user's voted restaurants
-    const newVotedRestaurants = new Set([...votedRestaurants, restaurantId])
-    setVotedRestaurants(newVotedRestaurants)
-    
-    // Save to localStorage
-    localStorage.setItem('votedRestaurants', JSON.stringify([...newVotedRestaurants]))
+const getStoredObject = (key, fallback) => {
+  if (typeof window === 'undefined') return fallback
+  try {
+    const raw = window.localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch (error) {
+    console.warn(`Failed to parse ${key} from localStorage`, error)
+    return fallback
   }
-
-  const resetVotes = () => {
-    if (window.confirm(t('confirmReset'))) {
-      setVotedRestaurants(new Set())
-      setRestaurants(prevRestaurants => 
-        prevRestaurants.map(restaurant => ({ ...restaurant, votes: 0 }))
-      )
-      localStorage.removeItem('votedRestaurants')
-      localStorage.removeItem('restaurantVotes')
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1"></div>
-            <div className="flex-1 text-center">
-              <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                🍽️ {t('title')}
-              </h1>
-              {language === 'vi' && (
-                <p className="text-lg text-gray-600 italic mb-2">
-                  {t('titleJa')}
-                </p>
-              )}
-            </div>
-            <div className="flex-1 flex justify-end">
-              <LanguageToggle />
-            </div>
-          </div>
-          
-          <p className="text-lg text-gray-600 mb-4">
-            {t('subtitle')}
-          </p>
-          {language === 'vi' && (
-            <p className="text-sm text-gray-500 italic mb-4">
-              {t('subtitleJa')}
-            </p>
-          )}
-          
-          {/* Quick Stats */}
-          <div className="bg-white rounded-lg shadow-md p-4 inline-block mb-6">
-            <div className="flex items-center gap-6 text-sm">
-              <div className="text-center">
-                <div className="font-bold text-2xl text-blue-600">{restaurants.length}</div>
-                <div className="text-gray-600">{t('restaurants')}</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-2xl text-green-600">{votedRestaurants.size}</div>
-                <div className="text-gray-600">{t('yourVotes')}</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-2xl text-purple-600">{totalVotes}</div>
-                <div className="text-gray-600">{t('totalVotes')}</div>
-              </div>
-              {votedRestaurants.size > 0 && (
-                <button
-                  onClick={resetVotes}
-                  className="text-red-600 hover:text-red-700 text-xs underline"
-                >
-                  {t('resetVotes')}
-                </button>
-              )}
-            </div>
-            
-            {/* API Status Indicator */}
-            <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-center">
-              <div className={`flex items-center text-xs ${isApiConfigured() ? 'text-green-600' : 'text-orange-600'}`}>
-                <span className="mr-1">
-                  {isApiConfigured() ? '🟢' : '🟡'}
-                </span>
-                {isApiConfigured() 
-                  ? (language === 'vi' ? 'API đã kết nối' : 'API接続済み')
-                  : (language === 'vi' ? 'Chế độ demo' : 'デモモード')
-                }
-                {isLoadingVotes && (
-                  <span className="ml-2">
-                    ⏳ {language === 'vi' ? 'Đang tải...' : '読み込み中...'}
-                  </span>
-                )}
-                {lastFetchTime && isApiConfigured() && (
-                  <span className="ml-2 text-gray-500">
-                    ({language === 'vi' ? 'Cập nhật lúc' : '更新時刻'}: {lastFetchTime.toLocaleTimeString()})
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Vote Results */}
-        <VoteResults restaurants={restaurants} totalVotes={totalVotes} />
-
-        {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-          <div className="flex items-start">
-            <span className="text-blue-600 text-xl mr-3">ℹ️</span>
-            <div>
-              <h3 className="font-semibold text-blue-800 mb-1">{t('howToVote')}</h3>
-              <ul className="text-blue-700 text-sm space-y-1">
-                <li>{t('instruction1')}</li>
-                <li>{t('instruction2')}</li>
-                <li>{t('instruction3')}</li>
-                <li>{t('instruction4')}</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        
-        {/* Restaurant Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {restaurants.map((restaurant) => (
-            <RestaurantCard
-              key={restaurant.id}
-              restaurant={restaurant}
-              onVote={handleVote}
-              hasVoted={votedRestaurants.has(restaurant.id)}
-            />
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-12 text-gray-500 text-sm">
-          <p>{t('footer')}</p>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function App() {
+  const [restaurants, setRestaurants] = useState(() => restaurantData.map((restaurant) => ({ ...restaurant })))
+  const [userVotes, setUserVotes] = useState(() => getStoredObject('userVotes', {}))
+  const [expandedRestaurant, setExpandedRestaurant] = useState(null)
+  const listRef = useRef(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const storedCounts = getStoredObject('voteCounts', {})
+    if (Object.keys(storedCounts).length === 0) return
+    setRestaurants((prev) =>
+      prev.map((restaurant) => ({
+        ...restaurant,
+        votes: storedCounts[restaurant.id] ?? restaurant.votes ?? 0,
+      }))
+    )
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('userVotes', JSON.stringify(userVotes))
+  }, [userVotes])
+
+  const totalVotes = useMemo(() => restaurants.reduce((sum, restaurant) => sum + (restaurant.votes ?? 0), 0), [restaurants])
+
+  const heroStats = useMemo(
+    () => [
+      { label: 'Restaurants shortlisted', value: restaurants.length },
+      { label: 'Local vote count', value: totalVotes },
+      { label: 'Menu images attached', value: totalMenuImages },
+    ],
+    [restaurants.length, totalVotes]
+  )
+
+  const handleVote = (restaurantId) => {
+    if (userVotes[restaurantId]) {
+      return { message: 'You already voted for this venue.' }
+    }
+
+    setRestaurants((prev) => {
+      const updated = prev.map((restaurant) =>
+        restaurant.id === restaurantId ? { ...restaurant, votes: (restaurant.votes ?? 0) + 1 } : restaurant
+      )
+
+      if (typeof window !== 'undefined') {
+        const payload = updated.reduce((acc, restaurant) => {
+          acc[restaurant.id] = restaurant.votes ?? 0
+          return acc
+        }, {})
+        window.localStorage.setItem('voteCounts', JSON.stringify(payload))
+      }
+
+      return updated
+    })
+
+    setUserVotes((prev) => ({ ...prev, [restaurantId]: true }))
+    return { message: 'Vote locked in. Thank you!' }
+  }
+
+  const toggleMenu = (restaurantId) => {
+    setExpandedRestaurant((current) => (current === restaurantId ? null : restaurantId))
+  }
+
+  const resetLocalData = () => {
+    if (typeof window === 'undefined') return
+    if (!window.confirm('Clear your local vote history? This only affects your browser.')) return
+    window.localStorage.removeItem('userVotes')
+    window.localStorage.removeItem('voteCounts')
+    setUserVotes({})
+    setRestaurants(restaurantData.map((restaurant) => ({ ...restaurant })))
+    setExpandedRestaurant(null)
+  }
+
+  const scrollToRestaurants = () => {
+    listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <div className="min-h-screen bg-slate-50 py-12">
+      <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 md:px-6">
+        <CoverSection
+          eyebrow={heroContent.eyebrow}
+          title={heroContent.title}
+          subtitle={heroContent.subtitle}
+          description={heroContent.description}
+          ctaLabel={heroContent.ctaLabel}
+          ctaHint={heroContent.ctaHint}
+          onPrimaryAction={scrollToRestaurants}
+          stats={heroStats}
+        />
+
+        <section ref={listRef} className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Shortlist</p>
+              <h2 className="text-3xl font-bold text-slate-900">Restaurants & live menus</h2>
+            </div>
+            <button
+              onClick={resetLocalData}
+              className="text-sm font-semibold text-slate-500 transition hover:text-slate-900"
+            >
+              Reset local votes
+            </button>
+          </div>
+
+          <div className="grid gap-8">
+            {restaurants.map((restaurant) => (
+              <RestaurantCard
+                key={restaurant.id}
+                restaurant={restaurant}
+                onVote={handleVote}
+                onToggleMenu={toggleMenu}
+                isExpanded={expandedRestaurant === restaurant.id}
+                hasVoted={Boolean(userVotes[restaurant.id])}
+              />
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
   )
 }
 
