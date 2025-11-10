@@ -8,7 +8,7 @@ import { fetchRestaurantsWithMenus, submitVote } from '../services/votingApi'
 
 const heroContent = {
   eyebrow: 'ESUTECH PARTY RESTAURANT VOTE',
-  title: 'Choice the restaurant you want for 15/11 party',
+  title: 'Choose the restaurant for the 15/11 party',
   subtitle: 'Two venues. One choice.',
   description: 'Browse the contenders below and lock in your one vote.',
   ctaLabel: 'See shortlist',
